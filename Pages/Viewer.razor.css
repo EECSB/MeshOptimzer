@@ -1,0 +1,19 @@
+﻿body {
+}
+
+.viewBorderBackground {
+    border: 2px solid #41464b61;
+    background-color: whitesmoke;
+}
+
+@media (min-width: 991px) {
+    .justify-content-center-on-over-990 {
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 990px) {
+    .justify-content-center-on-over-990 {
+        justify-content: normal !important;
+    }
+}

@@ -1,0 +1,246 @@
+﻿@page "/"
+
+@using System.IO;
+@using System.Net.Http
+@using System.Text.Json
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using System.Runtime.InteropServices.JavaScript;
+@using System.Text
+
+@inject IJSRuntime js;
+@inject HttpClient Http;
+@inject NavigationManager Navigation;
+
+<PageTitle>Obj Geometry Simplifier</PageTitle>
+
+
+<div class="row">
+
+    <!-- *********************************************** Main App ***************************************************** -->
+    
+    <div class="row d-flex justify-content-center-on-over-990">
+        <div class="col" style="max-width: 62em; min-width: 990px;">
+
+            <!-- *********************************************** Top Toolbar ***************************************************** -->
+
+            <div class="row" style="border-top: solid 1px gray; border-bottom: solid 1px gray;">
+                <div class="col">
+                    <div class="row toolbar">
+
+                        <div class="col-1 toolbarItem" style="align-items: end; display: flex;">
+                            <label for="fileUpload" style="cursor:pointer;">
+                                <img src="./resources/images/icons/upload.png" title="Upload Obj" />
+                            </label>
+                            <InputFile Id="fileUpload" style="margin-left: 10px; display:none;" OnChange="onFileInputChanged" multiple />
+                        </div>
+
+                        <div class="col-1 toolbarItem" style="align-items: end; display: flex;">
+                            <img @onclick="download3DObject" src="./resources/images/icons/download.png" title="Download 3D model" />
+
+                            <select @bind="ModelDownloadFileType" style="margin-left: 0.5em;">
+                                <option value=".obj" selected>.obj</option>
+                                <option value=".stl">.stl</option>
+                                <option value=".gltf">.gltf</option>
+                            </select>
+                        </div>
+
+                        <div class="col-1 toolbarItem" style="align-self: end; padding-left:2em;">
+                            <div><b>Background</b></div>
+                            <div>
+                                <select @onchange="changeBackground">
+                                    <option value="none">No Background</option>
+                                    <option value="background0.jpg" selected>Black</option>
+                                    <option value="background1.jpg">White</option>
+                                    <option value="background2.jpg">White Room</option>
+                                    <option value="background3.jpg">Future Room</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-1 toolbarItem" style="align-self: end;">
+                            <div><b>Mode</b></div>
+                            <div>
+                                <select @onchange="changeExampleType">
+                                    <option selected value="view3dModel">View 3D Model</option>
+                                    <option value="simplifyLoaded3dModel">Simplify loaded 3D Model</option>
+                                    <option value="simplifyExample">Simplify Example</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-1 toolbarItem" style="align-items: end; display: flex;">
+                            <img @onclick="getQRCode" src="./resources/images/icons/qr.png" style="padding-left: 2em;">
+                            <QR @ref="qrCodeComponent" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-1">
+                    <div class="row" style="height: 100%; padding: 0.4em;" @onclick="() => { showAbout = true; }">
+                        <img src="./icon-192.png" style="display: block; margin: auto 0;" />
+                    </div>
+
+                    @if (showAbout)
+                    {
+                        <div class="popupDiv popupZIndex_0" style="height: fit-content; width: 80%; left: 10%;">
+                            <div class="col">
+
+                                <div class="row mb-5">
+                                    <div class="col d-flex justify-content-start" style="font-size: large; font-weight: bold;">
+                                        About
+                                    </div>
+
+                                    <div class="col d-flex justify-content-end">
+                                        <button style="padding: 3px 10px; height: fit-content;" @onclick="() => { showAbout = false; }">X</button>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-5">
+                                    <div>
+                                        This is a tool I quickly threw together with code from another project of mine while I got the mesh optimization code from this post <a href="https://discourse.threejs.org/t/mesh-simplification-using-meshoptimizer/63002" target="_blank" rel="noopener noreferrer">here</a>. I thought I'd put it online in case someone finds it useful.
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ***************************************************************************************************************** -->
+            
+            <!-- Add some spacing -->
+            <br>
+
+            <div class="row">
+                <div class="col">
+                    <div class="viewWrapper">
+                        <div id="container" style="width: 950px; height: 950px"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ************************************************************************************************************** -->
+
+</div>
+
+@code {
+
+    #region Components ***************************************
+
+    private Pages.QR qrCodeComponent;
+
+    #endregion ***********************************************
+
+
+
+    #region Vraiables ****************************************
+
+    private bool isFirstRender = true;
+
+    private bool showAbout = false;
+
+    private bool cinematicViewToggle = false;
+    public string ModelDownloadFileType { get; set; } = ".obj";
+    public string ModelDownloadFileName { get; set; } = "simplifiedModel";
+
+    private string exampleType = "view3dModel";
+    private byte[] file3d;
+
+    #endregion ***********************************************
+
+
+
+    #region Initialization ***********************************
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        isFirstRender = firstRender;
+
+        if (firstRender)
+        {
+            await js.InvokeVoidAsync("registerThree");
+            await js.InvokeVoidAsync("startRender3DInterOp");
+
+            await render();
+        }
+    }
+
+    #endregion ***********************************************
+
+
+
+    #region Methods ******************************************
+
+    private void getQRCode()
+    {
+        qrCodeComponent.GenerateQRCode($"{Navigation.BaseUri}");
+    }
+
+    private async Task download3DObject()
+    {
+        await js.InvokeVoidAsync("download3DModelInterOp", ModelDownloadFileName, ModelDownloadFileType);
+    }
+
+    private async Task changeBackground(ChangeEventArgs e)
+    {
+        await js.InvokeVoidAsync("changeBackgroundInterOp", e.Value.ToString());
+    }
+
+    private async Task onFileInputChanged(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                foreach (var file in e.GetMultipleFiles(e.FileCount))
+                {
+                    await file.OpenReadStream().CopyToAsync(ms);
+                    file3d = ms.ToArray();
+
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+
+        await render();
+    }
+
+    private async Task changeExampleType(ChangeEventArgs e)
+    {
+        exampleType = e.Value.ToString();
+
+        await render();
+    }
+
+    public async Task render()
+    {
+        if (exampleType == "view3dModel")
+        {
+            await js.InvokeVoidAsync("load3dModelInterOp", file3d);
+        }
+        else if (exampleType == "simplifyExample")
+        {
+            await js.InvokeVoidAsync("load3dModelSimplifyTestInterOp");
+        }
+        else if (exampleType == "simplifyLoaded3dModel")
+        {
+            await js.InvokeVoidAsync("load3dModelSimplifyInterOp", file3d);
+        }
+    }
+
+    #endregion ***********************************************
+}
