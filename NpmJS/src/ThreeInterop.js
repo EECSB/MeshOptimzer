@@ -572,7 +572,7 @@ class Viewer3D {
             return;
         }
 
-        const texture = this.textureLoader.load(window.location.href + '/resources/Images/Background/' + backgroundName, () => {
+        const texture = this.textureLoader.load(window.location.href + '/resources/images/background/' + backgroundName, () => {
             const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
             rt.fromEquirectangularTexture(this.renderer, texture);
             this.scene.background = rt.texture;
