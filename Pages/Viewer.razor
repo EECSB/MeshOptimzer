@@ -36,7 +36,7 @@
                         </div>
 
                         <div class="col-1 toolbarItem" style="align-items: end; display: flex;">
-                            <img @onclick="download3DObject" src="./resources/images/icons/download.png" title="Download 3D model" />
+                            <img @onclick="download3DObject" src="./resources/images/icons/download.png" title="Download 3D model" style="padding-left: 2em;">
 
                             <select @bind="ModelDownloadFileType" style="margin-left: 0.5em;">
                                 <option value=".obj" selected>.obj</option>
@@ -99,7 +99,9 @@
                                 <div class="row mb-5">
                                     <p>This is a tool for simplifying 3D geometries of .obj files.</p>
                                     <p>I quickly threw this together with code from another project of mine while I got the mesh optimization code from this post <a href="https://discourse.threejs.org/t/mesh-simplification-using-meshoptimizer/63002" target="_blank" rel="noopener noreferrer">here</a>. I thought I'd put it online in case someone finds it useful.</p>
-                                    <p><a href="https://github.com/EECSB/MeshOptimzer">Github Repository</a></p>
+                                    <p>
+                                        Developed by <a href="https://eecs.blog" target="_blank" rel="noopener noreferrer">The EECS Blog</a>, project <a href="https://github.com/EECSB/MeshOptimzer" target="_blank" rel="noopener noreferrer">Github repository</a>.
+                                    </p>
                                 </div>
 
                             </div>
