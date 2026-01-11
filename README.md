@@ -1,6 +1,6 @@
 # 3D Mesh Optimizer
 
-![enter image description here](https://eecs.blog/wp-content/uploads/2026/01/mesh-optimizer-image.png)
+![mesh optimizer app image](https://eecs.blog/wp-content/uploads/2026/01/mesh-optimizer-image.png)
 
 ## About
 This is a tool for simplifying 3D geometries of .obj files.
